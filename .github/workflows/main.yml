@@ -12,23 +12,30 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+      with:
+        submodules: true
+
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y cmake g++
-      
+
     - name: Configure
-      run: cmake -H. -B_build -DCMAKE_INSTALL_PREFIX=_install
-      
+      run: cmake -H. -B_build -DCMAKE_INSTALL_PREFIX=_install -DBUILD_TESTS=ON
+
     - name: Build
       run: cmake --build _build
-      
+
     - name: Install
       run: cmake --build _build --target install
-      
+
     - name: Run example1
       run: _build/example1
-      
+
     - name: Run example2
       run: _build/example2
+
+    - name: Run tests
+      run: |
+        cd _build
+        ctest --verbose
