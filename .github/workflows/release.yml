@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*.*'
+
+jobs:
+  build-packages:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake g++ rpm
+
+    - name: Configure
+      run: cmake -H. -B_build -DCMAKE_INSTALL_PREFIX=_install
+
+    - name: Build
+      run: cmake --build _build
+
+    - name: Package TGZ
+      run: |
+        cd _build
+        cpack -G "TGZ"
+
+    - name: Package DEB
+      run: |
+        cd _build
+        cpack -G "DEB"
+
+    - name: Package RPM
+      run: |
+        cd _build
+        cpack -G "RPM"
+
+    - name: List packages
+      run: ls -la _build/*.tar.gz _build/*.deb _build/*.rpm || true
+
+    - name: Create Release and Upload Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          _build/*.tar.gz
+          _build/*.deb
+          _build/*.rpm
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
